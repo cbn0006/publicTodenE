@@ -123,17 +123,17 @@ export default function FunctionTabs({ setClustersData, setSelectedNode, setSele
   });
   
   async function PredictSubmit(data: z.infer<typeof PredictFormSchema>) {
-    console.log("Before normalization:", JSON.stringify(data)); // Log the whole data object
-    // 1. Normalization
+    console.log("Before normalization:", JSON.stringify(data));
+    
     if (data.alpha === '0.50') {
       data.alpha = '0.5';
     }
     console.log("After normalization - data.alpha:", data.alpha, "data.file:", data.file, "data.fileUpload:", data.fileUpload);
 
     if (
-      (data.alpha === '0.25' || data.alpha === '0.5') && // Condition A (alpha part)
-      data.file !== '' &&                                 // Condition B (file path part)
-      !data.fileUpload                                    // Condition C (file upload flag part)
+      (data.alpha === '0.25' || data.alpha === '0.5') && 
+      data.file !== '' && 
+      !data.fileUpload
     ) {
       setSelectedFile(`Leukemia_${data.clusters}_${data.alpha}`);
       handleSubmitComplete();
@@ -182,7 +182,6 @@ export default function FunctionTabs({ setClustersData, setSelectedNode, setSele
   }
 
   async function VisualizeSubmit(data: z.infer<typeof VisualizeFormSchema>) {
-    // console.log(data);
     setIsLoading(true);
     setProgress(0);
     const formData = new FormData();
@@ -207,7 +206,6 @@ export default function FunctionTabs({ setClustersData, setSelectedNode, setSele
       }
   
       const result = await response.json();
-      // console.log('Visualize result:', result);
       setSelectedNode(result.selectedNode);
       setClustersData({ clusters: result.allowedNodes });
       handleSubmitComplete();
@@ -226,10 +224,8 @@ export default function FunctionTabs({ setClustersData, setSelectedNode, setSele
     setProgress(0);
     const formData = new FormData();
   
-    // Append file selection (if any)
     formData.append('file', data.file || '');
     
-    // Append file upload (if provided)
     if (data.fileUpload && data.fileUpload.length > 0) {
       formData.append('fileUpload', data.fileUpload[0]);
     }
@@ -248,7 +244,6 @@ export default function FunctionTabs({ setClustersData, setSelectedNode, setSele
 
       const result = await response.json();
       console.log('Summarize result:', result);
-      // Handle result as needed (e.g., update state, show notifications, etc.)
     } catch (error) {
       console.error('Error submitting summarize form:', error);
       setAlertOpen(true);
@@ -263,7 +258,6 @@ export default function FunctionTabs({ setClustersData, setSelectedNode, setSele
     <div className="flex justify-center items-center h-full w-full">
       
       {isLoading ? (
-        // Show progress bar if waiting for backend response.
         <div className="w-1/2">
           <Progress value={progress} max={120} />
         </div>
@@ -408,9 +402,8 @@ export default function FunctionTabs({ setClustersData, setSelectedNode, setSele
                           <FormControl>
                             <div className="flex items-center space-x-4">
                               <Slider
-                                value={[Number(field.value) * 100]} // convert stored 0–1 value to 0–100 for the slider
+                                value={[Number(field.value) * 100]}
                                 onValueChange={(vals) => {
-                                  // Convert the slider value back to 0–1, formatted as a string with two decimals.
                                   field.onChange((vals[0] / 100).toFixed(2));
                                 }}
                                 defaultValue={[50]}

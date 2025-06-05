@@ -95,7 +95,7 @@ export default function DynamicGraph({
     if (!cocoData || cocoData.length === 0) return [];
   
     return cocoData.map((item: any, index: number) => {
-      const sim = parseFloat(item.SIMILARITY); // expect sim between 0 and 1
+      const sim = parseFloat(item.SIMILARITY);
       const radius = 100 + 325 * (1 - sim);
       const angle = (2 * Math.PI * index) / cocoData.length;
       const x = centerX + radius * Math.cos(angle);
@@ -185,46 +185,43 @@ export default function DynamicGraph({
     fetchNodeDetails();
   }, [selectedNode, selectedFunction]);
 
-  // Ensure UMAP and seedrandom are imported or available in the scop
-
   const fetchConMatrixAndComputeUMAP = async () => {
     let fileToFetch: string | null;
     let idTypeForApi: 'standard' | 'custom';
 
     if (selectedFile === "custom") {
-      if (!tempID || tempID === "Invalid") { // Check if tempID is valid for custom mode
+      if (!tempID || tempID === "Invalid") {
         console.error("fetchConMatrixAndComputeUMAP: 'custom' mode selected, but valid tempID is not available.");
-        setUmapCoords([]); // Clear previous UMAP coordinates
-        return; // Do not proceed if tempID is not valid for a custom run
+        setUmapCoords([]);
+        return;
       }
-      fileToFetch = tempID; // Use the actual resultId (tempID)
+      fileToFetch = tempID;
       idTypeForApi = 'custom';
-    } else if (selectedFile) { // This is a preset/standard file
+    } else if (selectedFile) {
       fileToFetch = selectedFile;
       idTypeForApi = 'standard';
     } else {
       console.log("fetchConMatrixAndComputeUMAP: No file selected (selectedFile is null or empty).");
-      setUmapCoords([]); // Clear UMAP coordinates as no file is selected
-      return; // No file selected, so nothing to fetch
+      setUmapCoords([]);
+      return;
     }
 
     try {
       const queryParams = new URLSearchParams({
         file: fileToFetch,
-        type: 'con', // Matrix type for UMAP is 'con'
-        id_type: idTypeForApi // Crucially, add id_type
+        type: 'con',
+        id_type: idTypeForApi
       });
 
       const apiPath = `/api/get-matrix-information?${queryParams.toString()}`;
-      console.log("Fetching matrix for UMAP from:", apiPath); // For debugging the constructed path
+      console.log("Fetching matrix for UMAP from:", apiPath);
 
       const response = await fetch(apiPath);
 
       if (!response.ok) {
         const text = await response.text();
         console.error("Error response from get-matrix-information:", response.status, text);
-        setUmapCoords([]); // Clear UMAP coordinates on error
-        // You might want to throw an error or set an error state here
+        setUmapCoords([]);
         return;
       }
 
@@ -242,33 +239,29 @@ export default function DynamicGraph({
         return;
       }
 
-      // Convert matrix strings to numbers
       const conMatrix = data.matrix.map((row: string[]) => row.map((cell: string) => parseFloat(cell)));
 
-      // Validate matrix content
       if (conMatrix.some((row: number[]) => row.some(isNaN))) {
         console.error("Matrix for UMAP contains NaN values after parsing.");
         setUmapCoords([]);
         return;
       }
-      if (conMatrix.length === 0) { // Check if matrix became empty after potential filtering/parsing
+      if (conMatrix.length === 0) {
           console.error("Matrix for UMAP is effectively empty after parsing.");
           setUmapCoords([]);
           return;
       }
       
-      // Compute 2D coordinates with UMAP
       const rng = seedrandom("toden-e-layout-v1");
-      const umapNeighborsSetting = 15; // The value you pass to the constructor
+      const umapNeighborsSetting = 15;
       const umapInstance = new UMAP({ 
         nComponents: 2, 
-        nNeighbors: umapNeighborsSetting, // Use the variable here
+        nNeighbors: umapNeighborsSetting,
         minDist: 0.1, 
         random: rng 
       });
       
-      // Optional: Check if there are enough data points for UMAP's nNeighbors setting
-      if (conMatrix.length > 0 && conMatrix.length < umapNeighborsSetting + 1) { // Use your setting directly
+      if (conMatrix.length > 0 && conMatrix.length < umapNeighborsSetting + 1) {
           console.warn(`Matrix for UMAP has ${conMatrix.length} data points, which is less than UMAP nNeighbors+1 (${umapNeighborsSetting + 1}). UMAP results might be suboptimal or error out.`);
       }
       
@@ -278,7 +271,7 @@ export default function DynamicGraph({
 
     } catch (error) {
       console.error("Error in fetchConMatrixAndComputeUMAP:", error);
-      setUmapCoords([]); // Clear UMAP coordinates on any exception
+      setUmapCoords([]);
     }
   };
 
@@ -454,12 +447,11 @@ export default function DynamicGraph({
   };
 
   const getColorForSimilarity = (sim: number) => {
-    // Assuming sim is between 0 and 1.
+
     const hue = sim * 120;
     return `hsl(${hue}, 100%, 50%)`;
   };
 
-  // Don't render overlay until dimensions have been measured
   if (!dimensions) {
     return (
       <div ref={containerRef} className="w-full h-full flex items-center justify-center relative">
@@ -628,7 +620,7 @@ export default function DynamicGraph({
                   const margin = 100;
                   const { width, height } = dimensions!;
                   
-                  // Calculate bounding box of the UMAP coordinates
+                  
                   const xs = umapCoords.map(([x, _]) => x);
                   const ys = umapCoords.map(([_, y]) => y);
                   const minX = Math.min(...xs);
@@ -639,21 +631,21 @@ export default function DynamicGraph({
                   const bboxWidth = maxX - minX;
                   const bboxHeight = maxY - minY;
                   
-                  // Determine available drawing area after subtracting margins
+                  
                   const availableWidth = width - 2 * margin;
                   const availableHeight = height - 2 * margin;
                   
-                  // Compute a new scale factor to fit the bounding box in the available area
+                  
                   const newScaleFactor = Math.min(availableWidth / bboxWidth, availableHeight / bboxHeight);
                   
-                  // Compute offsets so that the scaled bounding box is centered with a margin
+                  
                   const offsetX = margin + (availableWidth - bboxWidth * newScaleFactor) / 2 - newScaleFactor * minX;
                   const offsetY = margin + (availableHeight - bboxHeight * newScaleFactor) / 2 - newScaleFactor * minY;
                   
                   return umapCoords.map((coord, index) => {
                     const sortedNodes: string[] = todenEClusters.sortedNodes;
                     const nodeId = sortedNodes[index];
-                    // Determine cluster index for this node
+                    
                     let clusterIndex = -1;
                     if (todenEClusters.clusters && Array.isArray(todenEClusters.clusters)) {
                       for (let i = 0; i < todenEClusters.clusters.length; i++) {
@@ -671,7 +663,7 @@ export default function DynamicGraph({
 
                     const borderStyle = isActive ? "3px solid white" : "2px solid black";
               
-                    // Transform the original coordinate using our new scale factor and offsets
+                    
                     const xPos = coord[0] * newScaleFactor + offsetX;
                     const yPos = coord[1] * newScaleFactor + offsetY;
               

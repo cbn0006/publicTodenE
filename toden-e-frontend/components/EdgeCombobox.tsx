@@ -37,9 +37,7 @@ export const EdgeCombobox: React.FC<EdgeComboboxProps> = ({ edges, onSelect, sel
     }
   }, [open, selectedEdge]);
 
-  // Called when a user selects an edge from the combobox
   const handleSelect = (selectedEdgeValue: string) => {
-    // Look up the edge by a unique property – here we use the "to" field (assuming it’s unique)
     const edge = edges.find((edge) => edge.to === selectedEdgeValue);
     setOpen(false);
     if (edge && onSelect) {
@@ -47,7 +45,6 @@ export const EdgeCombobox: React.FC<EdgeComboboxProps> = ({ edges, onSelect, sel
     }
   };
 
-  // Workaround: cast command components to any so that they accept children
   const CommandAny = Command as any;
   const CommandInputAny = CommandInput as any;
   const CommandListAny = CommandList as any;
@@ -78,7 +75,7 @@ export const EdgeCombobox: React.FC<EdgeComboboxProps> = ({ edges, onSelect, sel
             <CommandGroupAny>
               {edges.map((edge) => (
                 <CommandItemAny
-                  key={edge.to} // assume "to" is unique per edge
+                  key={edge.to}
                   value={edge.to}
                   onSelect={handleSelect}
                 >

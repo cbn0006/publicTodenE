@@ -11,12 +11,12 @@ interface MatrixVisualizationProps {
   setSidebarOpen: (open: boolean) => void;
   selectedFile: string;
   view: string;
-  selectedMatrix: string; // This is 'adj' or 'con'
+  selectedMatrix: string;
   handleGoToTabs: () => void;
   setMatrixDims: (dimensions: number[] | null) => void;
   matrix: string[][];
   setMatrix: (matrix: string[][]) => void;
-  tempID: string | null; // Added tempID prop
+  tempID: string | null;
 }
 
 export default function MatrixVisualization({ 
@@ -28,7 +28,7 @@ export default function MatrixVisualization({
   setMatrixDims,
   matrix,
   setMatrix,
-  tempID // Destructure tempID
+  tempID
 }: MatrixVisualizationProps) {
 
   useEffect(() => {
@@ -43,14 +43,14 @@ export default function MatrixVisualization({
           fileToFetch = tempID;
           apiPath += `&file=${encodeURIComponent(fileToFetch)}&id_type=custom`;
         } else {
-          // If custom is selected but tempID is not valid, clear matrix and don't fetch
+          
           setMatrix([]);
           setMatrixDims(null);
           console.log("Custom file selected, but Temp ID is invalid or not set. Cleared matrix.");
           return;
         }
       } else {
-        if (!selectedFile) { // No standard file selected either
+        if (!selectedFile) {
             setMatrix([]);
             setMatrixDims(null);
             return;
@@ -82,7 +82,7 @@ export default function MatrixVisualization({
       }
     }
     fetchMatrix();
-  }, [selectedFile, view, selectedMatrix, tempID, setMatrix, setMatrixDims]); // Added tempID to dependency array
+  }, [selectedFile, view, selectedMatrix, tempID, setMatrix, setMatrixDims]);
 
   const rowHeight = 35;
   const columnWidth = 100;
@@ -113,7 +113,7 @@ export default function MatrixVisualization({
                 rowCount={rowCount}
                 rowHeight={rowHeight}
                 width={width}
-                itemKey={({ rowIndex, columnIndex }) => `${rowIndex}-${columnIndex}`} // Added itemKey for potential updates
+                itemKey={({ rowIndex, columnIndex }) => `${rowIndex}-${columnIndex}`}
               >
                 {// @ts-ignore
                   ({ columnIndex, rowIndex, style }) => (

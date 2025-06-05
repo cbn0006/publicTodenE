@@ -17,7 +17,7 @@ export async function POST(request: Request) {
 
     const projectRoot = process.cwd();
     const tempDirPath = path.join(projectRoot, 'tmp');
-    const targetFilename = `${id}.json`; // Append .json to the ID
+    const targetFilename = `${id}.json`;
     const targetPath = path.join(tempDirPath, targetFilename);
 
     try {

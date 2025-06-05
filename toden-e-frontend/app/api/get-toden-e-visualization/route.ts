@@ -6,8 +6,8 @@ import path from 'path';
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const file = searchParams.get('file'); // This will be the base name (e.g., Leukemia_2_0.5 or a resultId)
-    const id_type = searchParams.get('id_type'); // 'custom' or implies 'standard'
+    const file = searchParams.get('file');
+    const id_type = searchParams.get('id_type');
 
     if (!file) {
       return NextResponse.json(
@@ -18,8 +18,7 @@ export async function GET(request: Request) {
 
     let filePath;
     if (id_type === 'custom') {
-      // For custom IDs, 'file' is the resultId.
-      // Custom file path structure: tmp/toden_e_py_outputs/clusters_{resultId}.csv
+      
       filePath = path.join(
         process.cwd(),
         'tmp',
@@ -29,8 +28,7 @@ export async function GET(request: Request) {
       );
       console.log(`Custom file path (toden-e-visualization): ${filePath}`);
     } else {
-      // Standard pre-generated files
-      // Original path: go_metadata/data/{fileName}.csv
+      
       filePath = path.join(process.cwd(), 'go_metadata', 'data', `${file}.csv`);
       console.log(`Standard file path (toden-e-visualization): ${filePath}`);
     }

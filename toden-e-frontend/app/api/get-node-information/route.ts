@@ -19,14 +19,13 @@ export async function GET(request: Request) {
     const filePath = path.join(process.cwd(), 'go_metadata', 'filterpaginf2024.csv');
     const csvContent = await fs.readFile(filePath, 'utf8');
 
-    // Parse the CSV synchronously
     const records = parse(csvContent, {
         columns: true,
         skip_empty_lines: true,
         bom: true,
         trim: true
       });
-    // Find the matching GOID row
+    
     const row = records.find((r: any) => r.GOID?.trim().toUpperCase() === normalizedGoid);
 
     if (!row) {

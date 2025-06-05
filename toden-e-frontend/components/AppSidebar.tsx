@@ -85,29 +85,22 @@ export default function AppSidebar({
       },
     });
 
-  // If selectedNode or selectedFile change, update edges.
-  // Client-side function (if 'file' is always a preset filename)
   async function handleFileSelect(currentFileSelection: string) {
-    // currentFileSelection will be the value of your 'selectedFile' state,
-    // which could be "custom" or a preset filename like "Leukemia_2_0.5".
 
     let fileIdentifierForApi: string | null;
     let idTypeForApi: 'standard' | 'custom';
 
     if (currentFileSelection === "custom") {
-      // If the selection is "custom", we need the actual resultId stored in tempID.
-      // Ensure 'tempID' is accessible in this function's scope (e.g., from component state).
+
       if (!tempID) { 
         console.error('handleFileSelect: Mode is "custom" but tempID (resultId) is not available.');
-        // Optionally clear previous data
         setSelectedNode(''); 
         setClustersData(null);
         return;
       }
-      fileIdentifierForApi = tempID; // Use the actual resultId
+      fileIdentifierForApi = tempID;
       idTypeForApi = 'custom';
     } else if (currentFileSelection) {
-      // If it's not "custom" and it's a non-empty string, it's a preset filename.
       fileIdentifierForApi = currentFileSelection;
       idTypeForApi = 'standard';
     } else {
@@ -144,8 +137,6 @@ export default function AppSidebar({
       }
 
       setSelectedNode(result.selectedNode);
-      // Assuming 'result.allowedNodes' is the flat array of unique node strings
-      // and 'setClustersData' expects an object like { clusters: string[] }
       setClustersData({ clusters: result.allowedNodes });
 
     } catch (error) {
@@ -164,7 +155,6 @@ export default function AppSidebar({
     
   }, [selectedFunction, setSelectedEdge, setEdges]);
 
-  // Enable download of matrix csv.
   const handleDownloadCSV = async () => {
       if (!matrix || matrix.length === 0) {
           alert("No matrix data available to download.");
@@ -187,10 +177,8 @@ export default function AppSidebar({
       await saveData(blob, currentFileName);
   };
 
-  // Helper for downloading CSV
   async function saveData(blob: Blob, suggestedName: string) {
     try {
-      // Try the File System Access API
       if (window.showSaveFilePicker) {
         const options: SaveFilePickerOptions = {
           suggestedName: suggestedName,
@@ -203,32 +191,27 @@ export default function AppSidebar({
         const writableStream = await fileHandle.createWritable();
         await writableStream.write(blob);
         await writableStream.close();
-        return; // Success!
+        return;
       }
-      // If showSaveFilePicker is not available, an error will be caught below
-      // or we proceed to fallback if it simply wasn't defined.
-      // Throw an error to fall into the catch block for the fallback.
       throw new Error('File System Access API not supported.');
     } catch (err: any) {
-      // Handle errors: user cancellation, or API not supported.
       if (err.name === 'AbortError') {
         console.log('File save dialog was cancelled by the user.');
         return;
       }
       console.warn('File System Access API failed or not supported, falling back to legacy download:', err.message);
 
-      // Fallback for browsers that don't support showSaveFilePicker or if it fails
       const link = document.createElement('a');
       if (typeof link.download === 'string') {
         const url = URL.createObjectURL(blob);
         link.setAttribute('href', url);
-        link.setAttribute('download', suggestedName); // This still suggests a name
+        link.setAttribute('download', suggestedName);
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-      } else if (window.navigator.msSaveBlob) { // IE 10+ support
+      } else if (window.navigator.msSaveBlob) {
         window.navigator.msSaveBlob(blob, suggestedName);
       } else {
         alert("CSV download is not fully supported in your browser, or the operation was cancelled.");

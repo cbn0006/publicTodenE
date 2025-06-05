@@ -56,12 +56,11 @@ export async function POST(request: Request) {
         }
       }
       results = newResults;
-      // Prepare CSV lines to append
+      
       let csvLines = results.map(r => `${r.GS_A_ID},${r.GS_B_ID},${r.SIMILARITY}`).join('\n') + '\n';
       if (cacheExists) {
         await fs.appendFile(cacheFilePath, csvLines, 'utf8');
       } else {
-        // Create the file with header and new rows
         const headerLine = 'GS_A_ID,GS_B_ID,SIMILARITY\n';
         await fs.writeFile(cacheFilePath, headerLine + csvLines, 'utf8');
       }
