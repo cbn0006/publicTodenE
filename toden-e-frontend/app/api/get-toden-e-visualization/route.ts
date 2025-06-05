@@ -1,0 +1,90 @@
+// app/api/get-toden-e-visualization/route.ts
+import { NextResponse } from 'next/server';
+import fs from 'fs/promises';
+import path from 'path';
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const file = searchParams.get('file'); // This will be the base name (e.g., Leukemia_2_0.5 or a resultId)
+    const id_type = searchParams.get('id_type'); // 'custom' or implies 'standard'
+
+    if (!file) {
+      return NextResponse.json(
+        { error: "Missing 'file' parameter" },
+        { status: 400 }
+      );
+    }
+
+    let filePath;
+    if (id_type === 'custom') {
+      // For custom IDs, 'file' is the resultId.
+      // Custom file path structure: tmp/toden_e_py_outputs/clusters_{resultId}.csv
+      filePath = path.join(
+        process.cwd(),
+        'tmp',
+        'toden_e_py_outputs',
+        `${file}`,
+        `clusters_${file}.csv`
+      );
+      console.log(`Custom file path (toden-e-visualization): ${filePath}`);
+    } else {
+      // Standard pre-generated files
+      // Original path: go_metadata/data/{fileName}.csv
+      filePath = path.join(process.cwd(), 'go_metadata', 'data', `${file}.csv`);
+      console.log(`Standard file path (toden-e-visualization): ${filePath}`);
+    }
+
+    const fileContent = await fs.readFile(filePath, 'utf8');
+
+    const lines = fileContent.split('\n').filter(line => line.trim() !== '');
+    if (lines.length < 2) {
+      return NextResponse.json(
+        { error: 'File does not contain enough data for Toden-E visualization.' },
+        { status: 400 }
+      );
+    }
+
+    const splitCSV = (line: string) =>
+      line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+
+    const headers = splitCSV(lines[0]).map(h => h.trim());
+    const numClusters = headers.length - 1;
+
+    const dataRow = splitCSV(lines[1]);
+    const algorithm = dataRow[0].trim();
+
+    const clusters: string[][] = [];
+    for (let i = 1; i < dataRow.length; i++) {
+      const cleaned = dataRow[i].trim().replace(/^"|"$/g, '');
+      const clusterNodes = cleaned.split(',').map(node => node.trim()).filter(Boolean);
+      clusters.push(clusterNodes);
+    }
+
+    const allNodesSet = new Set<string>();
+    clusters.forEach(cluster => {
+      cluster.forEach(node => allNodesSet.add(node));
+    });
+    const sortedNodes = Array.from(allNodesSet).sort();
+
+    return NextResponse.json({
+      algorithm,
+      clusters,
+      sortedNodes,
+      numClusters,
+    });
+
+  } catch (error: any) {
+    console.error('Error in get-toden-e-visualization API:', error.message, error.code);
+    if (error.code === 'ENOENT') {
+      return NextResponse.json(
+        { error: 'Toden-E visualization data file not found.' },
+        { status: 404 }
+      );
+    }
+    return NextResponse.json(
+      { error: 'Error processing Toden-E visualization data file' },
+      { status: 500 }
+    );
+  }
+}
