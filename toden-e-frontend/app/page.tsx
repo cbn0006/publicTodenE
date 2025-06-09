@@ -1,19 +1,8 @@
 // app/page.tsx
-"use client";
+import { redirect } from 'next/navigation';
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-
+// This component now handles the redirect on the server before any HTML is sent.
+// It's more efficient and the standard way to do this with the App Router.
 export default function RootPage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    router.push('/home');
-  }, [router]);
-
-  return (
-    <div className="flex h-screen justify-center items-center">
-      <p>Redirecting to home...</p>
-    </div>
-  );
+  redirect('/home');
 }
