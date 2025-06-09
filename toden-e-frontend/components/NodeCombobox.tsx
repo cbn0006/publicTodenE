@@ -45,13 +45,8 @@ export const NodeCombobox: React.FC<NodeComboboxProps> = ({ nodes, onSelect, sel
     if (onSelect) onSelect(selectedValue);
   };
 
-  // Workaround: cast command components to any so that they accept children
-  const CommandAny = Command as any;
-  const CommandInputAny = CommandInput as any;
-  const CommandListAny = CommandList as any;
-  const CommandEmptyAny = CommandEmpty as any;
-  const CommandGroupAny = CommandGroup as any;
-  const CommandItemAny = CommandItem as any;
+  // The 'any' casts have been removed. We now use the components directly
+  // as they are imported, relying on their built-in type definitions.
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -61,22 +56,23 @@ export const NodeCombobox: React.FC<NodeComboboxProps> = ({ nodes, onSelect, sel
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className=""
+          className="justify-between w-full" // Added justify-between and w-full for better default styling
         >
           {selectedNode
             ? nodes.find((node) => node.value === selectedNode)?.label
             : "Select node..."}
-          <ChevronsUpDown className="opacity-50" />
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0" style={{ width: buttonWidth }}>
-        <CommandAny>
-          <CommandInputAny className="h-9" />
-          <CommandListAny>
-            <CommandEmptyAny>No node found.</CommandEmptyAny>
-            <CommandGroupAny>
+        {/* Using the original, type-safe components */}
+        <Command>
+          <CommandInput placeholder="Search node..." className="h-9" />
+          <CommandList>
+            <CommandEmpty>No node found.</CommandEmpty>
+            <CommandGroup>
               {nodes.map((node) => (
-                <CommandItemAny
+                <CommandItem
                   key={node.value}
                   value={node.value}
                   onSelect={handleSelect}
@@ -84,15 +80,15 @@ export const NodeCombobox: React.FC<NodeComboboxProps> = ({ nodes, onSelect, sel
                   {node.label}
                   <Check
                     className={cn(
-                      "ml-auto",
+                      "ml-auto h-4 w-4", // Added h-4 and w-4 for consistent icon sizing
                       selectedNode === node.value ? "opacity-100" : "opacity-0"
                     )}
                   />
-                </CommandItemAny>
+                </CommandItem>
               ))}
-            </CommandGroupAny>
-          </CommandListAny>
-        </CommandAny>
+            </CommandGroup>
+          </CommandList>
+        </Command>
       </PopoverContent>
     </Popover>
   );

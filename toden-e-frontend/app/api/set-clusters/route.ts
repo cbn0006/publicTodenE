@@ -1,4 +1,3 @@
-// app/api/create-m-type-data/route.ts
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
@@ -45,10 +44,17 @@ export async function POST(request: Request) {
     let datasetContent;
     try {
       datasetContent = await fs.readFile(actualDatasetFilePath, 'utf8');
-    } catch (err: any) {
-      console.error(`Error reading dataset file ${actualDatasetFilePath}: ${err.message}`, err.code);
-      if (err.code === 'ENOENT') {
-        return NextResponse.json({ error: `Source file for node extraction not found: ${path.basename(actualDatasetFilePath)}` }, { status: 404 });
+      // FIX (Error on line 48): Change 'any' to 'unknown' and add a type guard.
+    } catch (err: unknown) {
+      // Safely check for properties before using them.
+      if (typeof err === 'object' && err !== null && 'code' in err && 'message' in err) {
+        const nodeError = err as { code: string; message: string };
+        console.error(`Error reading dataset file ${actualDatasetFilePath}: ${nodeError.message}`, nodeError.code);
+        if (nodeError.code === 'ENOENT') {
+          return NextResponse.json({ error: `Source file for node extraction not found: ${path.basename(actualDatasetFilePath)}` }, { status: 404 });
+        }
+      } else {
+        console.error(`An unexpected error occurred reading ${actualDatasetFilePath}`, err);
       }
       return NextResponse.json({ error: 'Error reading source file for node extraction' }, { status: 500 });
     }
@@ -63,8 +69,13 @@ export async function POST(request: Request) {
       allowedNodes, 
     });
 
-  } catch (error: any) {
-    console.error("Error in create-m-type-data route:", error.message);
+    // FIX (Error on line 66): Change 'any' to 'unknown' and use 'instanceof Error' to check the type.
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error("Error in create-m-type-data route:", error.message);
+    } else {
+      console.error("An unexpected error occurred in create-m-type-data route:", error);
+    }
     return NextResponse.json({ error: 'Error processing request in create-m-type-data route' }, { status: 500 });
   }
 }

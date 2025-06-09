@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
-import Image from 'next/image';
+// import Image from 'next/image';
 import {
     DropdownMenu,
     DropdownMenuItem,
@@ -16,7 +16,7 @@ import { useState, useEffect } from 'react';
 import { Separator } from "@/components/ui/separator"
 
 const Navbar = () => {
-  const { theme } = useTheme();
+  // const { theme } = useTheme();
 
   const [currentRoute, setCurrentRoute] = useState("");
 

@@ -2,6 +2,16 @@ import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 
+// FIX 1: Define a specific type for your data structure.
+// This interface will be used to replace 'any'.
+interface SimilarityData {
+  GS_A_ID: string;
+  GS_B_ID: string;
+  SIMILARITY: string;
+  // Use Record<string, string> to allow for other potential string properties
+  [key: string]: string; 
+}
+
 export async function POST(request: Request) {
   try {
     const { node, allowedNodes, fileName } = await request.json();
@@ -16,7 +26,9 @@ export async function POST(request: Request) {
     }
 
     const cacheFilePath = path.join(process.cwd(), 'go_metadata', 'data', `${fileName}Data.csv`);
-    let cachedRows: any[] = [];
+    
+    // FIX 2 (Error on line 19): Replace 'any[]' with our new type 'SimilarityData[]'.
+    let cachedRows: SimilarityData[] = [];
     let cacheExists = false;
     try {
       await fs.access(cacheFilePath);
@@ -26,14 +38,18 @@ export async function POST(request: Request) {
       const header = lines[0].split(',');
       cachedRows = lines.slice(1).map(line => {
         const cols = line.split(',');
-        let obj: any = {};
+        
+        // FIX 3 (Error on line 29): Define 'obj' with an index signature instead of 'any'.
+        // We then assert the final object matches our specific type.
+        const obj: { [key: string]: string } = {};
         header.forEach((key, idx) => {
           obj[key] = cols[idx];
         });
-        return obj;
+        return obj as SimilarityData;
       });
-    } catch (err) {
+    } catch (error) {
       cacheExists = false;
+      console.log(error)
     }
 
     let results = cachedRows.filter(item => item['GS_A_ID'] === node && allowedNodes.includes(item['GS_B_ID']));
@@ -42,7 +58,7 @@ export async function POST(request: Request) {
       const filePath = path.join(process.cwd(), 'go_metadata', 'm_type_biological_process.txt');
       const fileContent = await fs.readFile(filePath, 'utf8');
       const lines = fileContent.split('\n').filter(line => line.trim() !== '');
-      const newResults = [];
+      const newResults: SimilarityData[] = [];
       
       for (let i = 1; i < lines.length; i++) {
         const cols = lines[i].split('\t');
@@ -57,7 +73,7 @@ export async function POST(request: Request) {
       }
       results = newResults;
       
-      let csvLines = results.map(r => `${r.GS_A_ID},${r.GS_B_ID},${r.SIMILARITY}`).join('\n') + '\n';
+      const csvLines = results.map(r => `${r.GS_A_ID},${r.GS_B_ID},${r.SIMILARITY}`).join('\n') + '\n';
       if (cacheExists) {
         await fs.appendFile(cacheFilePath, csvLines, 'utf8');
       } else {

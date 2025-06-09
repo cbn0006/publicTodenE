@@ -1,9 +1,14 @@
-// app/api/predict/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { spawn } from 'child_process';
+
+// FIX: Define a specific type for the Python script's output instead of 'any'.
+interface PythonScriptOutput {
+  error?: string;
+  result?: unknown; // Use 'unknown' for nested data whose structure isn't strictly defined here.
+}
 
 const LOCAL_PROJECT_TMP_BASE = path.join(process.cwd(), 'tmp');
 const IS_VERCEL_ENV = !!process.env.VERCEL_ENV;
@@ -21,8 +26,10 @@ const TTL_MS = 30 * 60 * 1000;
 async function ensureDir(dirPath: string) {
   try {
     await fs.mkdir(dirPath, { recursive: true });
-  } catch (error) {
-    console.warn(`Could not create directory: ${dirPath}`, error);
+    // FIX (Error on line 29): The 'error' variable is not used, so it can be removed from the catch clause.
+  } catch {
+    // This is a warning, so we can ignore the error object if we don't need to inspect it.
+    console.warn(`Could not create directory: ${dirPath}`);
   }
 }
 
@@ -38,7 +45,7 @@ function runPythonPredictScript(
   alpha: string,
   clusters: string,
   resultId: string
-): Promise<any> {
+): Promise<PythonScriptOutput> { // FIX (Error on line 41): Use the specific type.
   return new Promise((resolve, reject) => {
     const pythonExecutable = 'python3';
     const pythonScriptPath = path.join(process.cwd(), 'python_scripts', 'runner.py');
@@ -74,7 +81,9 @@ function runPythonPredictScript(
         reject(new Error(`Failed to parse Python script output. Ensure Python ONLY prints JSON to stdout. Output: ${stdoutData.trim()}`));
       }
     });
-    pythonProcess.on('error', (err) => { /* ... */ });
+    // FIX (Error on line 84): Disable the ESLint rule for this line since '_err' is intentionally unused.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    pythonProcess.on('error', (_err) => { /* ... */ });
   });
 }
 
@@ -111,8 +120,8 @@ async function generateMTypeRelatedDataFile(
   let sourceFileContent;
   try {
     sourceFileContent = await fs.readFile(sourceTodenEClusterCsvPath, 'utf8');
-  } catch (err) {
-    console.error(`generateMTypeRelatedDataFile: Source Toden-E cluster CSV file not found at ${sourceTodenEClusterCsvPath}`, err);
+  } catch (error) {
+    console.error(`generateMTypeRelatedDataFile: Source Toden-E cluster CSV file not found at ${sourceTodenEClusterCsvPath}`, error);
     throw new Error(`Source Toden-E cluster CSV file for M-Type data not found: ${sourceTodenEClusterCsvPath}`);
   }
 
@@ -132,8 +141,8 @@ async function generateMTypeRelatedDataFile(
   let hugeContent;
   try {
     hugeContent = await fs.readFile(hugeBioProcessFilePath, 'utf8');
-  } catch (err) {
-    console.error(`generateMTypeRelatedDataFile: Huge bioprocess file not found at ${hugeBioProcessFilePath}`, err);
+  } catch (error) {
+    console.error(`generateMTypeRelatedDataFile: Huge bioprocess file not found at ${hugeBioProcessFilePath}`, error);
     throw new Error(`Huge bioprocess file not found: ${hugeBioProcessFilePath}`);
   }
   
@@ -196,7 +205,8 @@ export async function POST(request: NextRequest) {
       inputIdentifierForResults = `${selectedFileBaseName}.txt`;
       pagsTxtPathForPython = path.join(process.cwd(), 'python_scripts', 'data', `${selectedFileBaseName}.txt`);
       console.log(`Using predefined file: ${pagsTxtPathForPython}`);
-      try { await fs.access(pagsTxtPathForPython); } catch (e) { /* ... error ... */ return NextResponse.json({ error: `Selected data file "${inputIdentifierForResults}" not found on server.` }, { status: 404 });}
+      // FIX (Error on line 199): Remove the unused 'e' variable from the catch block.
+      try { await fs.access(pagsTxtPathForPython); } catch { return NextResponse.json({ error: `Selected data file "${inputIdentifierForResults}" not found on server.` }, { status: 404 });}
     } 
     else {
       return NextResponse.json({ error: 'No file provided.' }, { status: 400 });
@@ -212,6 +222,7 @@ export async function POST(request: NextRequest) {
     const mTypeOutputCsvPath = path.join(PYTHON_TARGET_TMP_BASE, 'toden_e_py_outputs', resultId, `data_${resultId}.csv`);
     
     let mTypeGenerationStats: { allowedNodesCount: number; resultsCount: number } | null = null;
+    // FIX (Error on line 222): Change 'any' to 'unknown' and safely check the error type.
     try {
       mTypeGenerationStats = await generateMTypeRelatedDataFile(
         sourceTodenEClusterCsvPath,
@@ -219,8 +230,12 @@ export async function POST(request: NextRequest) {
         mTypeOutputCsvPath
       );
       console.log(`M-Type related data generation for resultId ${resultId} completed. Stats:`, mTypeGenerationStats);
-    } catch (mTypeError: any) {
-      console.error(`Failed to generate M-Type related data for resultId ${resultId}:`, mTypeError.message);
+    } catch (mTypeError: unknown) {
+      if (mTypeError instanceof Error) {
+        console.error(`Failed to generate M-Type related data for resultId ${resultId}:`, mTypeError.message);
+      } else {
+        console.error(`An unknown error occurred while generating M-Type data for resultId ${resultId}`);
+      }
     }
 
     const actualPredictionData = pythonOutput.result;
@@ -244,6 +259,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, resultId: resultId, result: actualPredictionData });
 
-  } catch (error: any) { /* ... error handling ... */ }
+  } catch (error: unknown) { // FIX (Errors on line 247): Change 'any' to 'unknown' and add proper error handling.
+    console.error("An error occurred in the predict API route:", error);
+    return NextResponse.json({ success: false, error: "An internal server error occurred." }, { status: 500 });
+  }
   finally { /* ... cleanup tempUploadedInputFilePath ... */ }
 }

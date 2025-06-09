@@ -1,18 +1,16 @@
 "use client";
 
 import React, { useMemo, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { Plus, Minus, TableOfContents, ChevronUp, ChevronDown, Maximize, Minimize } from "lucide-react";
+import { Plus, Minus, TableOfContents, Maximize, Minimize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Edge } from "@/types/edge";
 import { UMAP } from "umap-js";
-// @ts-ignore
 import seedrandom from "seedrandom";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -49,7 +47,7 @@ export default function DynamicGraph({
     selectedFile, 
     setSidebarOpen, 
     view,
-    setView, 
+    // setView, 
     selectedFunction,
     setSelectedNode,
     setSelectedEdge,
@@ -58,13 +56,13 @@ export default function DynamicGraph({
     setHoveredEdge,
     hoveredNode,
     setHoveredNode,
-    setDrawerOpen,
-    drawerOpen,
+    // setDrawerOpen,
+    // drawerOpen,
     handleGoToTabs,
     setTodenEClusters,
     todenEClusters,
     hoveredCluster,
-    edges,
+    // edges,
     setEdges,
     tempID
   }: DynamicGraphProps) {
@@ -363,7 +361,7 @@ export default function DynamicGraph({
     if (!isDraggingRef.current) return;
     const dx = e.clientX - lastPosRef.current.x;
     const dy = e.clientY - lastPosRef.current.y;
-    let newOffset = { x: offset.x + dx, y: offset.y + dy };
+    const newOffset = { x: offset.x + dx, y: offset.y + dy };
     if (containerRef.current) {
       const cw = containerRef.current.clientWidth;
       const ch = containerRef.current.clientHeight;
@@ -478,7 +476,6 @@ export default function DynamicGraph({
       )}
       <div className="flex absolute top-4 left-4 z-10 items-start space-x-1">
         <Button
-          // @ts-ignore
             onClick={() => setSidebarOpen((prev: boolean) => !prev)}
             variant="outline"
           >
@@ -621,7 +618,9 @@ export default function DynamicGraph({
                   const { width, height } = dimensions!;
                   
                   
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
                   const xs = umapCoords.map(([x, _]) => x);
+                  // eslint-disable-next-line @typescript-eslint/no-unused-vars
                   const ys = umapCoords.map(([_, y]) => y);
                   const minX = Math.min(...xs);
                   const maxX = Math.max(...xs);

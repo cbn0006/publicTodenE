@@ -6,7 +6,6 @@ import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import FunctionTabs from "@/components/FunctionTabs";
-// @ts-ignore
 import Navbar from '@/components/navbar';
 import DynamicGraph from "@/components/DynamicGraph";
 import AppSidebar from "@/components/AppSidebar";
@@ -29,7 +28,7 @@ export default function HomePage() {
   // What is the hoveredEdge?
   const [hoveredEdge, setHoveredEdge] = useState<string | null>(null);
   // Keeps track of what clusters each node belongs to for rendering in sidebar and graph.
-  const [todenEClusters, setTodenEClusters] = useState<any>(null);
+  const [todenEClusters, setTodenEClusters] = useState<{ clusters: string[][]; sortedNodes: string[]; } | null>(null);
   // What is the hovered Node?
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   // What is the hovered Cluster?
@@ -118,7 +117,6 @@ export default function HomePage() {
                   view={view}
                   selectedEdge={selectedEdge}
                   setSelectedEdge={setSelectedEdge}
-                  hoveredEdge={hoveredEdge}
                   setHoveredEdge={setHoveredEdge}
                   setHoveredNode={setHoveredNode}
                   selectedMatrix={selectedMatrix}
@@ -162,7 +160,7 @@ export default function HomePage() {
               />
               {drawerOpen &&
                 <SummaryDrawer 
-                  setDrawerOpen={setDrawerOpen}
+                  // setDrawerOpen={setDrawerOpen}
                   selectedFunction={selectedFunction} 
                 />
               }
@@ -182,7 +180,6 @@ export default function HomePage() {
                               view={view}
                               selectedEdge={selectedEdge}
                               setSelectedEdge={setSelectedEdge}
-                              hoveredEdge={hoveredEdge}
                               setHoveredEdge={setHoveredEdge}
                               setHoveredNode={setHoveredNode}
                               selectedMatrix={selectedMatrix}

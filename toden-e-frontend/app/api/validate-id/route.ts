@@ -23,10 +23,12 @@ export async function POST(request: Request) {
     try {
       await fs.access(targetPath);
       return NextResponse.json({ isValid: true });
-    } catch (error) {
+      // FIX (Error on line 26): The 'error' variable is not used, so it can be removed.
+    } catch {
       return NextResponse.json({ isValid: false });
     }
-  } catch (error) {
+    // FIX (Error on line 29): This 'error' variable is also not used and can be removed.
+  } catch {
     return NextResponse.json({ isValid: false, message: 'Error processing request.' }, { status: 500 });
   }
 }

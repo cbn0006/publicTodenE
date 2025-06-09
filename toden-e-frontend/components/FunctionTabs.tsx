@@ -14,7 +14,7 @@ import { useForm } from "react-hook-form";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger,} from "@/components/ui/tabs";
 import { HelpCircle } from "lucide-react";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 
@@ -56,9 +56,9 @@ const SummarizeFormSchema = z
 );
 
 interface TabsContentProps {
-  setClustersData: (data: any) => void;
-  setSelectedNode: (data: any) => void;
-  setSelectedFile: (data: any) => void;
+  setClustersData: (data: { clusters: string[] }) => void;
+  setSelectedNode: (data: string) => void;
+  setSelectedFile: (data: string) => void;
   handleSubmitComplete: () => void;
   setTempID: (id: string) => void;
 }
@@ -185,7 +185,7 @@ export default function FunctionTabs({ setClustersData, setSelectedNode, setSele
     setIsLoading(true);
     setProgress(0);
     const formData = new FormData();
-    setSelectedFile(data.file);
+    setSelectedFile(data.file || "");
     
     formData.append('file', data.file || '');
     
@@ -303,7 +303,7 @@ export default function FunctionTabs({ setClustersData, setSelectedNode, setSele
                         choose number of clusters, and choose whether or not they want summarization.
                         Upon submission, there will be a loading period where the user will need to wait
                         for Toden-E to complete its calculations. Then, Toden-E will forward the user to the page corresponding
-                        to the user's desired Toden-E functionality.
+                        to the user`&apos`s desired Toden-E functionality.
                       </p>
                       <p className="text-lg font-semibold leading-none tracking-tight dark:text-white">
                         Example File Format
@@ -492,7 +492,7 @@ export default function FunctionTabs({ setClustersData, setSelectedNode, setSele
                         The Summarize Function allows the user to select or upload a file for summarization.
                         Upon submission, there will be a loading period where the user will need to wait
                         for Toden-E to complete its summarization. Then, Toden-E will forward the user to the page corresponding
-                        to the user's desired Toden-E functionality.
+                        to the user`&apos`s desired Toden-E functionality.
                       </p>
                       <p className="text-lg font-semibold leading-none tracking-tight dark:text-white">
                         Example File Format
@@ -627,7 +627,7 @@ export default function FunctionTabs({ setClustersData, setSelectedNode, setSele
                         The Summarize Function allows the user to select or upload a file for summarization.
                         Upon submission, there will be a loading period where the user will need to wait
                         for Toden-E to complete its summarization. Then, Toden-E will forward the user to the page corresponding
-                        to the user's desired Toden-E functionality.
+                        to the user`&apos~s desired Toden-E functionality.
                       </p>
                       <p className="text-lg font-semibold leading-none tracking-tight dark:text-white">
                         Example File Format

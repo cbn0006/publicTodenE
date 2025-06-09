@@ -2,18 +2,18 @@
 
 "use client";
 
-import React, { useState, useRef } from "react";
-import { ChevronUp, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+// import React, { useState, useRef } from "react";
+// import { ChevronUp, ChevronDown } from "lucide-react";
+// import { Button } from "@/components/ui/button";
 
 
 interface SummaryDrawerProps {
-    setDrawerOpen: (open: boolean) => void;
+    // setDrawerOpen: (open: boolean) => void;
     selectedFunction: string;
 }
 
 export default function SummaryDrawer ({ 
-        setDrawerOpen,
+        // setDrawerOpen,
         selectedFunction, 
     }: SummaryDrawerProps) {
     return (

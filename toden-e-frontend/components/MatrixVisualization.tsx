@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, type Dispatch, type SetStateAction } from "react";
 import { Button } from "@/components/ui/button";
 import { TableOfContents } from "lucide-react";
-// @ts-ignore
 import { FixedSizeGrid as Grid } from "react-window";
 import AutoSizer from "react-virtualized-auto-sizer";
 
 interface MatrixVisualizationProps {
-  setSidebarOpen: (open: boolean) => void;
+  setSidebarOpen: Dispatch<SetStateAction<boolean>>;
   selectedFile: string;
   view: string;
   selectedMatrix: string;
@@ -92,8 +91,8 @@ export default function MatrixVisualization({
   return (
     <div className="flex flex-1 overflow-hidden relative">
       <div className="flex absolute top-4 left-4 z-10 space-x-1">
-        <Button onClick={//@ts-ignore
-            () => setSidebarOpen(prev => !prev)} 
+        <Button onClick={
+            () => setSidebarOpen((prev: boolean) => !prev)} 
             variant="outline"
         >
           <TableOfContents />
@@ -115,7 +114,7 @@ export default function MatrixVisualization({
                 width={width}
                 itemKey={({ rowIndex, columnIndex }) => `${rowIndex}-${columnIndex}`}
               >
-                {// @ts-ignore
+                {
                   ({ columnIndex, rowIndex, style }) => (
                   <div style={style} className="border p-1 whitespace-nowrap overflow-hidden text-ellipsis">
                     {isNaN(Number(matrix[rowIndex][columnIndex]))

@@ -1,4 +1,3 @@
-// app/api/get-toden-e-visualization/route.ts
 import { NextResponse } from 'next/server';
 import fs from 'fs/promises';
 import path from 'path';
@@ -72,14 +71,23 @@ export async function GET(request: Request) {
       numClusters,
     });
 
-  } catch (error: any) {
-    console.error('Error in get-toden-e-visualization API:', error.message, error.code);
-    if (error.code === 'ENOENT') {
-      return NextResponse.json(
-        { error: 'Toden-E visualization data file not found.' },
-        { status: 404 }
-      );
+  } catch (error: unknown) { // FIX: Changed 'any' to 'unknown'
+    // By checking the error's structure, we can safely access its properties.
+    if (typeof error === 'object' && error !== null && 'code' in error) {
+      const nodeError = error as { code: string; message: string };
+      console.error('Error in get-toden-e-visualization API:', nodeError.message, nodeError.code);
+      
+      if (nodeError.code === 'ENOENT') {
+        return NextResponse.json(
+          { error: 'Toden-E visualization data file not found.' },
+          { status: 404 }
+        );
+      }
+    } else {
+      // Fallback for unexpected error types
+      console.error('An unexpected error occurred in get-toden-e-visualization API:', error);
     }
+    
     return NextResponse.json(
       { error: 'Error processing Toden-E visualization data file' },
       { status: 500 }

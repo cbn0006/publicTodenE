@@ -49,15 +49,24 @@ export async function GET(request: Request) {
     const dims = [matrix.length, matrix[0].length];
 
     return NextResponse.json({ matrix, dims });
-  } catch (error: any) {
-    console.error('Error reading matrix file:', error.message, error.code);
-    
-    if (error.code === 'ENOENT') {
-        return NextResponse.json(
-            { error: 'Matrix file not found.' },
-            { status: 404 }
-        );
+  } catch (error: unknown) { // FIX: Changed 'any' to 'unknown'
+    // By checking if 'error' is an object and has a 'code' property,
+    // we can safely access it without TypeScript complaining.
+    if (typeof error === 'object' && error !== null && 'code' in error) {
+      const nodeError = error as { code: string; message: string };
+      console.error('Error reading matrix file:', nodeError.message, nodeError.code);
+      
+      if (nodeError.code === 'ENOENT') {
+          return NextResponse.json(
+              { error: 'Matrix file not found.' },
+              { status: 404 }
+          );
+      }
+    } else {
+      // Fallback for errors that don't fit the expected shape
+      console.error('An unexpected error occurred:', error);
     }
+    
     return NextResponse.json(
       { error: 'Error processing matrix file' },
       { status: 500 }

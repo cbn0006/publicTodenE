@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
@@ -13,7 +13,7 @@ import { EdgeCombobox } from "@/components/EdgeCombobox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Edge } from "@/types/edge";
 import { z } from "zod";
-import { Form, FormControl, FormField, FormLabel, FormDescription, FormMessage, FormItem } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormMessage, FormItem } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,7 +34,6 @@ interface AppSidebarProps {
   view: string;
   selectedEdge: Edge | null;
   setSelectedEdge: (edge: Edge | null) => void;
-  hoveredEdge: string | null;
   setHoveredEdge: (edge: string | null) => void;
   setHoveredNode: (node: string | null) => void;
   selectedMatrix: string;
@@ -62,7 +61,6 @@ export default function AppSidebar({
     view,
     selectedEdge,
     setSelectedEdge,
-    hoveredEdge,
     setHoveredEdge,
     setHoveredNode,
     selectedMatrix,

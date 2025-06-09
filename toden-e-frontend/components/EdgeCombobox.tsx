@@ -45,36 +45,32 @@ export const EdgeCombobox: React.FC<EdgeComboboxProps> = ({ edges, onSelect, sel
     }
   };
 
-  const CommandAny = Command as any;
-  const CommandInputAny = CommandInput as any;
-  const CommandListAny = CommandList as any;
-  const CommandEmptyAny = CommandEmpty as any;
-  const CommandGroupAny = CommandGroup as any;
-  const CommandItemAny = CommandItem as any;
+  // The 'any' casts have been removed to use the original, type-safe components.
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button 
-          variant="outline" 
-          role="combobox" 
-          aria-expanded={open} 
+        <Button
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
           ref={buttonRef}
+          className="justify-between w-full" // Added for consistent styling
         >
           {selectedEdge
             ? `${selectedEdge.to}`
             : "Select edge..."}
-          <ChevronsUpDown className="opacity-50" />
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="p-0" style={{ width: buttonWidth }}>
-        <CommandAny>
-          <CommandInputAny className="h-9" placeholder="Search edges..." />
-          <CommandListAny>
-            <CommandEmptyAny>No edge found.</CommandEmptyAny>
-            <CommandGroupAny>
+        <Command>
+          <CommandInput className="h-9" placeholder="Search edges..." />
+          <CommandList>
+            <CommandEmpty>No edge found.</CommandEmpty>
+            <CommandGroup>
               {edges.map((edge) => (
-                <CommandItemAny
+                <CommandItem
                   key={edge.to}
                   value={edge.to}
                   onSelect={handleSelect}
@@ -82,15 +78,15 @@ export const EdgeCombobox: React.FC<EdgeComboboxProps> = ({ edges, onSelect, sel
                   {`${edge.to}`}
                   <Check
                     className={cn(
-                      "ml-auto",
+                      "ml-auto h-4 w-4",
                       selectedEdge?.to === edge.to ? "opacity-100" : "opacity-0"
                     )}
                   />
-                </CommandItemAny>
+                </CommandItem>
               ))}
-            </CommandGroupAny>
-          </CommandListAny>
-        </CommandAny>
+            </CommandGroup>
+          </CommandList>
+        </Command>
       </PopoverContent>
     </Popover>
   );
