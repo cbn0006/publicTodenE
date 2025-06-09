@@ -19,7 +19,7 @@ interface DynamicGraphProps {
   clustersData: { clusters: string[] } | null;
   selectedNode: string;
   selectedFile: string | null;
-  setSidebarOpen: (open: boolean) => void;
+  setSidebarOpen: React.Dispatch<React.SetStateAction<boolean>>;
   view: string;
   setView: (view: string) => void;
   selectedFunction: string;
@@ -39,6 +39,12 @@ interface DynamicGraphProps {
   edges: Edge[];
   setEdges: (edges: Edge[]) => void;
   tempID: string | null;
+}
+
+interface CoCoNode {
+  GS_A_ID: string;
+  GS_B_ID: string;
+  SIMILARITY: string;
 }
 
 export default function DynamicGraph({ 
@@ -69,7 +75,7 @@ export default function DynamicGraph({
 
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [cocoData, setCocoData] = useState<any>(null);
+  const [cocoData, setCocoData] = useState<CoCoNode[] | null>(null);
   const [umapCoords, setUmapCoords] = useState<number[][]>([]);
   const [dimensions, setDimensions] = useState<{ width: number; height: number } | null>(null);
   const [nodeCardOpen, setNodeCardOpen] = useState<boolean>(false);
@@ -92,7 +98,7 @@ export default function DynamicGraph({
   const surroundingNodes = useMemo(() => {
     if (!cocoData || cocoData.length === 0) return [];
   
-    return cocoData.map((item: any, index: number) => {
+    return cocoData.map((item: CoCoNode, index: number) => {
       const sim = parseFloat(item.SIMILARITY);
       const radius = 100 + 325 * (1 - sim);
       const angle = (2 * Math.PI * index) / cocoData.length;
@@ -105,7 +111,7 @@ export default function DynamicGraph({
   useEffect(() => {
     if (selectedFunction === "CoCo" && selectedNode && dimensions) {
       if (surroundingNodes.length > 0) {
-        const newEdges: Edge[] = surroundingNodes.map((node: { GS_B_ID: any; normSim: any; x: number; y: number; }) => ({
+        const newEdges: Edge[] = surroundingNodes.map((node: { GS_B_ID: string; normSim: number; x: number; y: number; }) => ({
         from: selectedNode,
         to: node.GS_B_ID,
         similarity: node.normSim,
@@ -374,9 +380,7 @@ export default function DynamicGraph({
     lastPosRef.current = { x: e.clientX, y: e.clientY };
   };
 
-  const openNodeCard = () => {
-    setNodeCardOpen((prev: boolean) => !prev)
-  };
+  const openNodeCard = () => { setNodeCardOpen(!nodeCardOpen) };
 
   const handleMouseUp = () => {
     isDraggingRef.current = false;
@@ -540,7 +544,7 @@ export default function DynamicGraph({
             <>
               {/* SVG for edges from the central node to each surrounding node */}
               <svg className="absolute inset-0" width={overlayWidth} height={overlayHeight}>
-                  {surroundingNodes.map((node: any, idx: number) => {
+                  {surroundingNodes.map((node, idx: number) => {
                     // Assume node.GS_B_ID uniquely identifies the edge's target.
                     const isSelected = selectedEdge && selectedEdge.to === node.GS_B_ID;
                     const isHovered = hoveredEdge === node.GS_B_ID;
@@ -587,7 +591,7 @@ export default function DynamicGraph({
                 </TooltipProvider>
               </div>
               {/* Surrounding Nodes as Buttons */}
-              {surroundingNodes.map((node: any, idx: number) => (
+              {surroundingNodes.map((node, idx: number) => (
                 <div
                   key={idx}
                   className="absolute pointer-events-auto"

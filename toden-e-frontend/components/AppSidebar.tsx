@@ -19,6 +19,15 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CopyIcon } from "@radix-ui/react-icons";
 
+declare global {
+  interface Window {
+    showSaveFilePicker: (options?: SaveFilePickerOptions) => Promise<FileSystemFileHandle>;
+  }
+  interface Navigator {
+    msSaveBlob?: (blob: Blob, defaultName?: string) => boolean;
+  }
+}
+
 const IDFormSchema = z.object({
   id: z.string().nonempty({ message: "ID value required." }),
 })
@@ -192,12 +201,17 @@ export default function AppSidebar({
         return;
       }
       throw new Error('File System Access API not supported.');
-    } catch (err: any) {
-      if (err.name === 'AbortError') {
-        console.log('File save dialog was cancelled by the user.');
-        return;
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        if (err.name === 'AbortError') {
+          console.log('File save dialog was cancelled by the user.');
+          return;
+        }
+        console.warn('File System Access API failed or not supported, falling back to legacy download:', err.message);
+      } else {
+        // Fallback for cases where a non-Error was thrown
+        console.warn('File System Access API failed or not supported, falling back to legacy download.');
       }
-      console.warn('File System Access API failed or not supported, falling back to legacy download:', err.message);
 
       const link = document.createElement('a');
       if (typeof link.download === 'string') {
@@ -374,7 +388,7 @@ export default function AppSidebar({
                 {selectedFunction === "toden-e" && todenEClusters && todenEClusters.clusters.length > 0 && (
                   <div className="space-y-4">
                     {todenEClusters.clusters.map((cluster, clusterIndex) => (
-                      <ScrollArea className="h-64">
+                      <ScrollArea key={clusterIndex} className="h-64">
                       <Table key={clusterIndex} className="w-full">
                         <TableHeader>
                           <TableRow>
@@ -469,9 +483,10 @@ export default function AppSidebar({
                           <TableHead>Similarity</TableHead>
                         </TableRow>
                       </TableHeader>
+                      <TableBody>
                         {edges && edges.length > 0 ? (
                           edges.map((edge, index) => (
-                            <TableBody>
+                            
                             <TableRow 
                               key={index}
                               onClick={() => setSelectedEdge(edge)}
@@ -484,11 +499,12 @@ export default function AppSidebar({
                                 {edge.similarity.toFixed(4)}
                               </TableCell>
                             </TableRow>
-                            </TableBody>
+                            
                           ))
                         ) : (
                           <TableCaption>No edges found.</TableCaption>
                         )}
+                        </TableBody>
                     </Table>
                     </ScrollArea>
                   </CardContent>
