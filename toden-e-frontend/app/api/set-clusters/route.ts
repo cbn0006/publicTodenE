@@ -45,7 +45,7 @@ export async function POST(request: Request) {
                 const datasetContent = await fs.readFile(actualDatasetFilePath, 'utf8');
                 const customNodesSet = extractAllowedNodesFromFileContent(datasetContent);
                 customNodesSet.forEach(node => nodesSet.add(node));
-            } catch (err) {
+            } catch {
                 return NextResponse.json({ error: 'Custom source file not found' }, { status: 404 });
             }
         }
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
             allowedNodes,
         });
 
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Error processing request' }, { status: 500 });
     }
 }

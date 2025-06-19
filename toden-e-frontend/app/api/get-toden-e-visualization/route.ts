@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
-import fs from 'fs/promises';
-import path from 'path';
+// import fs from 'fs/promises';
+// import path from 'path';
 
 export async function GET(request: Request) {
     try {
@@ -43,13 +43,13 @@ export async function GET(request: Request) {
             });
 
         } else {
-            const filePath = path.join(process.cwd(), 'tmp', 'toden_e_py_outputs', `${fileIdentifier}`, `clusters_${fileIdentifier}.csv`);
-            const fileContent = await fs.readFile(filePath, 'utf8');
+            // const filePath = path.join(process.cwd(), 'tmp', 'toden_e_py_outputs', `${fileIdentifier}`, `clusters_${fileIdentifier}.csv`);
+            // const fileContent = await fs.readFile(filePath, 'utf8');
             // ... your existing custom file parsing logic here ...
             return NextResponse.json({ message: "Custom logic would run here" });
         }
 
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Error processing Toden-E visualization data' }, { status: 500 });
     }
 }
