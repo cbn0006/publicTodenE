@@ -1,26 +1,12 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
-import { parse } from 'csv-parse/sync';
-
-// FIX 1: Define an interface for the shape of a single CSV record.
-// This makes your code type-safe and easier to work with.
-interface NodeInfoRecord {
-  GOID: string;
-  NAME: string;
-  ORGANISM: string;
-  SIZE: string;
-  LINK:string;
-  DESCRIPTION: string;
-  [key: string]: string; // Allows for other columns in the CSV
-}
+import { sql } from '@vercel/postgres';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const goid = searchParams.get('goid');
-    const normalizedGoid = goid?.trim().toUpperCase();
 
+    // Keep the parameter validation
     if (!goid) {
       return NextResponse.json(
         { error: "Missing 'goid' parameter" },
@@ -28,42 +14,40 @@ export async function GET(request: Request) {
       );
     }
 
-    const filePath = path.join(process.cwd(), 'go_metadata', 'filterpaginf2024.csv');
-    const csvContent = await fs.readFile(filePath, 'utf8');
-
-    // FIX 2: Apply the interface to the parsed records.
-    // Now TypeScript knows exactly what each 'record' looks like.
-    const records: NodeInfoRecord[] = parse(csvContent, {
-        columns: true,
-        skip_empty_lines: true,
-        bom: true,
-        trim: true
-      });
+    // 2. Replace the entire file-reading block with a single database query.
+    // This query is parameterized, which prevents SQL injection attacks.
+    const { rows } = await sql`
+      SELECT name, organism, size, link, description 
+      FROM pag_info 
+      WHERE goid = ${goid};
+    `;
     
-    // FIX 3 (Error on line 29): Remove ': any'. TypeScript now infers the correct type.
-    // The 'r' parameter is automatically known to be of type 'NodeInfoRecord'.
-    const row = records.find((r) => r.GOID?.trim().toUpperCase() === normalizedGoid);
+    // 3. Get the first row from the result.
+    // Since 'goid' is a primary key, this will either be one row or undefined.
+    const nodeInfo = rows[0];
 
-    if (!row) {
+    // Keep the "not found" check
+    if (!nodeInfo) {
       return NextResponse.json(
         { error: `GOID ${goid} not found` },
         { status: 404 }
       );
     }
-
-    const { NAME, ORGANISM, SIZE, LINK, DESCRIPTION } = row;
-
+    
+    // 4. Return the data directly from the database record.
     return NextResponse.json({
-      name: NAME,
-      organism: ORGANISM,
-      size: SIZE,
-      link: LINK,
-      description: DESCRIPTION
+      name: nodeInfo.name,
+      organism: nodeInfo.organism,
+      size: nodeInfo.size,
+      link: nodeInfo.link,
+      description: nodeInfo.description
     });
+
   } catch (error) {
-    console.error('Error reading node info:', error);
+    // Updated error message for clarity
+    console.error('Database query failed:', error);
     return NextResponse.json(
-      { error: 'Error processing node information' },
+      { error: 'Internal server error while querying the database' },
       { status: 500 }
     );
   }

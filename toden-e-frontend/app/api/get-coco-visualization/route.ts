@@ -1,90 +1,50 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs/promises';
-import path from 'path';
+import { sql } from '@vercel/postgres';
 
-// FIX 1: Define a specific type for your data structure.
-// This interface will be used to replace 'any'.
+// Define the shape of the data being returned.
+// This ensures type safety and matches your original API's output.
 interface SimilarityData {
   GS_A_ID: string;
   GS_B_ID: string;
-  SIMILARITY: string;
-  // Use Record<string, string> to allow for other potential string properties
-  [key: string]: string; 
+  SIMILARITY: number;
 }
 
 export async function POST(request: Request) {
   try {
-    const { node, allowedNodes, fileName } = await request.json();
+    // 1. Get the parameters from the request body.
+    // The 'fileName' parameter is no longer needed.
+    const { node, allowedNodes } = await request.json();
+
+    // 2. Keep the validation to ensure the frontend sends the correct data.
     if (!node) {
       return NextResponse.json({ error: 'No node provided' }, { status: 400 });
     }
-    if (!allowedNodes || !Array.isArray(allowedNodes)) {
-      return NextResponse.json({ error: 'No allowed nodes provided or invalid' }, { status: 400 });
-    }
-    if (!fileName) {
-      return NextResponse.json({ error: 'No fileName provided' }, { status: 400 });
+    if (!allowedNodes || !Array.isArray(allowedNodes) || allowedNodes.length === 0) {
+      return NextResponse.json({ error: 'No allowed nodes provided or list is empty' }, { status: 400 });
     }
 
-    const cacheFilePath = path.join(process.cwd(), 'go_metadata', 'data', `${fileName}Data.csv`);
-    
-    // FIX 2 (Error on line 19): Replace 'any[]' with our new type 'SimilarityData[]'.
-    let cachedRows: SimilarityData[] = [];
-    let cacheExists = false;
-    try {
-      await fs.access(cacheFilePath);
-      cacheExists = true;
-      const cacheContent = await fs.readFile(cacheFilePath, 'utf8');
-      const lines = cacheContent.split('\n').filter(line => line.trim() !== '');
-      const header = lines[0].split(',');
-      cachedRows = lines.slice(1).map(line => {
-        const cols = line.split(',');
-        
-        // FIX 3 (Error on line 29): Define 'obj' with an index signature instead of 'any'.
-        // We then assert the final object matches our specific type.
-        const obj: { [key: string]: string } = {};
-        header.forEach((key, idx) => {
-          obj[key] = cols[idx];
-        });
-        return obj as SimilarityData;
-      });
-    } catch (error) {
-      cacheExists = false;
-      console.log(error)
-    }
+    // 3. Construct and execute a single, efficient database query.
+    // This replaces all file reading, parsing, and caching logic.
+    const { rows } = await sql<SimilarityData>`
+      SELECT 
+        gs_a_id AS "GS_A_ID", 
+        gs_b_id AS "GS_B_ID", 
+        similarity AS "SIMILARITY"
+      FROM 
+        similarity_scores
+      WHERE 
+        gs_a_id = ${node} AND gs_b_id = ANY(${allowedNodes});
+    `;
 
-    let results = cachedRows.filter(item => item['GS_A_ID'] === node && allowedNodes.includes(item['GS_B_ID']));
+    // The 'rows' variable now contains the exact results.
+    // The SQL query aliases the lowercase column names (e.g., gs_a_id)
+    // to uppercase ("GS_A_ID") to match your original API response.
 
-    if (results.length === 0) {
-      const filePath = path.join(process.cwd(), 'go_metadata', 'm_type_biological_process.txt');
-      const fileContent = await fs.readFile(filePath, 'utf8');
-      const lines = fileContent.split('\n').filter(line => line.trim() !== '');
-      const newResults: SimilarityData[] = [];
-      
-      for (let i = 1; i < lines.length; i++) {
-        const cols = lines[i].split('\t');
-        
-        if (cols[0] === node && allowedNodes.includes(cols[1])) {
-          newResults.push({
-            GS_A_ID: cols[0],
-            GS_B_ID: cols[1],
-            SIMILARITY: cols[6]
-          });
-        }
-      }
-      results = newResults;
-      
-      const csvLines = results.map(r => `${r.GS_A_ID},${r.GS_B_ID},${r.SIMILARITY}`).join('\n') + '\n';
-      if (cacheExists) {
-        await fs.appendFile(cacheFilePath, csvLines, 'utf8');
-      } else {
-        const headerLine = 'GS_A_ID,GS_B_ID,SIMILARITY\n';
-        await fs.writeFile(cacheFilePath, headerLine + csvLines, 'utf8');
-      }
-    }
+    // 4. Return the results directly.
+    return NextResponse.json({ results: rows });
 
-    return NextResponse.json({ results });
   } catch (error) {
-    console.error("Error in get-visualization route:", error);
+    console.error("Error in similarity scores route:", error);
     return NextResponse.json({ error: 'Error processing request' }, { status: 500 });
   }
 }
