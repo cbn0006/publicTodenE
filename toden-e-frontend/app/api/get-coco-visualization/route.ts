@@ -2,20 +2,24 @@ import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
 
 // Define the shape of the data being returned.
-// This ensures type safety and matches your original API's output.
 interface SimilarityData {
   GS_A_ID: string;
   GS_B_ID: string;
   SIMILARITY: number;
 }
 
+// DEFINE THE SHAPE of the incoming request body for type safety.
+interface ApiRequestBody {
+  node: string;
+  allowedNodes: string[];
+}
+
 export async function POST(request: Request) {
   try {
-    // 1. Get the parameters from the request body.
-    // The 'fileName' parameter is no longer needed.
-    const { node, allowedNodes } = await request.json();
+    // 1. Get parameters and apply the type.
+    const { node, allowedNodes } = await request.json() as ApiRequestBody;
 
-    // 2. Keep the validation to ensure the frontend sends the correct data.
+    // 2. Keep the validation.
     if (!node) {
       return NextResponse.json({ error: 'No node provided' }, { status: 400 });
     }
@@ -23,9 +27,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No allowed nodes provided or list is empty' }, { status: 400 });
     }
 
-    // 3. Construct and execute a single, efficient database query.
-    // This replaces all file reading, parsing, and caching logic.
-    const { rows } = await sql<SimilarityData>`
+    // 3. Define the query string with PostgreSQL placeholders ($1, $2).
+    const queryText = `
       SELECT 
         gs_a_id AS "GS_A_ID", 
         gs_b_id AS "GS_B_ID", 
@@ -33,14 +36,16 @@ export async function POST(request: Request) {
       FROM 
         similarity_scores
       WHERE 
-        gs_a_id = ${node} AND gs_b_id = ANY(${allowedNodes});
+        gs_a_id = $1 AND gs_b_id = ANY($2);
     `;
 
-    // The 'rows' variable now contains the exact results.
-    // The SQL query aliases the lowercase column names (e.g., gs_a_id)
-    // to uppercase ("GS_A_ID") to match your original API response.
+    // 4. Define the array of values to be safely passed to the query.
+    const values = [node, allowedNodes];
 
-    // 4. Return the results directly.
+    // 5. Execute the query using the sql.query() function.
+    const { rows } = await sql.query<SimilarityData>(queryText, values);
+
+    // 6. Return the results directly.
     return NextResponse.json({ results: rows });
 
   } catch (error) {
