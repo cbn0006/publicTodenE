@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       FROM 
         similarity_scores
       WHERE 
-        gs_a_id = $1 AND gs_b_id = ANY($2);
+        gs_a_id = ${node} AND gs_b_id = ANY(${allowedNodes});
     `;
 
     // The 'rows' variable now contains the exact results.
