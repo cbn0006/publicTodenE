@@ -6,6 +6,7 @@ import { TableOfContents } from "lucide-react";
 import { FixedSizeGrid as Grid } from "react-window";
 import AutoSizer from "react-virtualized-auto-sizer";
 
+// 1. UPDATE THE PROPS INTERFACE
 interface MatrixVisualizationProps {
   setSidebarOpen: Dispatch<SetStateAction<boolean>>;
   selectedFile: string;
@@ -16,6 +17,7 @@ interface MatrixVisualizationProps {
   matrix: string[][];
   setMatrix: (matrix: string[][]) => void;
   tempID: string | null;
+  alpha: string;
 }
 
 export default function MatrixVisualization({ 
@@ -27,7 +29,8 @@ export default function MatrixVisualization({
   setMatrixDims,
   matrix,
   setMatrix,
-  tempID
+  tempID,
+  alpha // 2. RECEIVE THE PROP
 }: MatrixVisualizationProps) {
 
   useEffect(() => {
@@ -37,12 +40,21 @@ export default function MatrixVisualization({
       let fileToFetch = selectedFile;
       let apiPath = `/api/get-matrix-information?type=${encodeURIComponent(selectedMatrix)}`;
 
+      if (selectedMatrix === 'con') {
+        if (!alpha) {
+          console.error("Cannot fetch 'con' matrix without an alpha value.");
+          setMatrix([]);
+          setMatrixDims(null);
+          return;
+        }
+        apiPath += `&alpha=${encodeURIComponent(alpha)}`;
+      }
+
       if (selectedFile === "custom") {
         if (tempID && tempID !== "Invalid") {
           fileToFetch = tempID;
           apiPath += `&file=${encodeURIComponent(fileToFetch)}&id_type=custom`;
         } else {
-          
           setMatrix([]);
           setMatrixDims(null);
           console.log("Custom file selected, but Temp ID is invalid or not set. Cleared matrix.");
@@ -58,6 +70,7 @@ export default function MatrixVisualization({
       }
       
       try {
+        console.log("Fetching matrix from:", apiPath); // Log the final path for debugging
         const response = await fetch(apiPath);
         if (!response.ok) {
           console.error("Failed to fetch matrix data:", response.status, await response.text());
@@ -81,7 +94,7 @@ export default function MatrixVisualization({
       }
     }
     fetchMatrix();
-  }, [selectedFile, view, selectedMatrix, tempID, setMatrix, setMatrixDims]);
+  }, [selectedFile, view, selectedMatrix, tempID, setMatrix, setMatrixDims, alpha]); // 4. ADD currentAlpha TO THE DEPENDENCY ARRAY
 
   const rowHeight = 35;
   const columnWidth = 100;

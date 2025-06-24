@@ -52,6 +52,8 @@ export default function HomePage() {
 
   const [tempID, setTempID] = useState<string | null>(null);
 
+  const [alpha, setAlpha] = useState<string>("");
+
   const nodesArray = useMemo(() => {
     if (!clustersData) return [];
     if (!clustersData?.clusters) return [];
@@ -130,6 +132,7 @@ export default function HomePage() {
                   tempID={tempID}
                   setTempID={setTempID}
                   setClustersData={setClustersData}
+                  setAlpha={setAlpha}
                 />
             }
             <div className="flex flex-1 flex-col">
@@ -157,6 +160,7 @@ export default function HomePage() {
                 edges={edges}
                 setEdges={setEdges}
                 tempID={tempID}
+                alpha={alpha}
               />
               {drawerOpen &&
                 <SummaryDrawer 
@@ -193,6 +197,7 @@ export default function HomePage() {
                               tempID={tempID}
                               setTempID={setTempID}
                               setClustersData={setClustersData}
+                              setAlpha={setAlpha}
                             />
             }
             <MatrixVisualization 
@@ -205,6 +210,7 @@ export default function HomePage() {
               matrix={matrix}
               setMatrix={setMatrix}
               tempID={tempID}
+              alpha={alpha}
             />
           </div>
         ) : (null)}

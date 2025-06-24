@@ -39,6 +39,7 @@ interface DynamicGraphProps {
   edges: Edge[];
   setEdges: (edges: Edge[]) => void;
   tempID: string | null;
+  alpha: string;
 }
 
 interface CoCoNode {
@@ -70,7 +71,8 @@ export default function DynamicGraph({
     hoveredCluster,
     // edges,
     setEdges,
-    tempID
+    tempID,
+    alpha
   }: DynamicGraphProps) {
 
   const [scale, setScale] = useState(1);
@@ -210,11 +212,17 @@ export default function DynamicGraph({
       return;
     }
 
+    if (!alpha) {
+      console.error("fetchConMatrixAndComputeUMAP: Alpha value is not set.");
+      return;
+    }
+
     try {
       const queryParams = new URLSearchParams({
         file: fileToFetch,
         type: 'con',
-        id_type: idTypeForApi
+        id_type: idTypeForApi,
+        alpha: alpha
       });
 
       const apiPath = `/api/get-matrix-information?${queryParams.toString()}`;

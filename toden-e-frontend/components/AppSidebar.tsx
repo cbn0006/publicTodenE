@@ -56,6 +56,7 @@ interface AppSidebarProps {
   tempID: string | null;
   setTempID: (id: string) => void;
   setClustersData: (clustersData: { clusters: string[] } | null) => void;
+  setAlpha: React.Dispatch<React.SetStateAction<string>>;
 }
 
 export default function AppSidebar({ 
@@ -82,7 +83,8 @@ export default function AppSidebar({
     setEdges,
     tempID,
     setTempID,
-    setClustersData
+    setClustersData,
+    setAlpha
   }: AppSidebarProps) {
 
   const IDForm = useForm({
@@ -160,7 +162,7 @@ export default function AppSidebar({
       setEdges([]);
     }
     
-  }, [selectedFunction, setSelectedEdge, setEdges]);
+  }, [selectedFunction, selectedNode, setSelectedEdge, setEdges]);
 
   const handleDownloadCSV = async () => {
       if (!matrix || matrix.length === 0) {
@@ -304,6 +306,18 @@ export default function AppSidebar({
                       <Select onValueChange={(value) => {
                               setSelectedFile(value);
                               handleFileSelect(value);
+                              if (value === 'custom') {
+                                  setAlpha(''); // Clear alpha when switching to custom
+                              } else {
+                                  const parts = value.split('_');
+                                  // Assumes format like "Dataset_Clusters_Alpha"
+                                  if (parts.length > 2) {
+                                      const parsedAlpha = parts[parts.length - 1];
+                                      setAlpha(parsedAlpha);
+                                  } else {
+                                      setAlpha(''); // Clear alpha if file format doesn't match
+                                  }
+                              }
                               }}
                               value={selectedFile}
                       >
